@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    public File getAlbumStorageDir(Context context) {
+    public File getPrivateExternalStorageDir(Context context) {
         // Get the directory for the app's private pictures directory.
         File file = new File(context.getExternalFilesDir(
                 Environment.DIRECTORY_DOCUMENTS), "SWP");
@@ -113,12 +113,22 @@ public class MainActivity extends AppCompatActivity {
         return file;
     }
 
+    public File getPublicExternalStorageDir() {
+        // Get the directory for the user's public pictures directory.
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "SWP");
+        if (!file.mkdirs()) {
+            Log.e(LOG_TAG, "Directory not created");
+        }
+        Log.e(LOG_TAG, "directory: " + file.getAbsolutePath());
+        return file;
+    }
+
     private boolean saveData(Context context, Long timestamp) {
         if (!this.isExternalStorageWritable()) {
             Log.e(LOG_TAG, "External storage is not writable");
             return false;
         }
-        File dir = this.getAlbumStorageDir(context);
+        File dir = this.getPublicExternalStorageDir();
         if (dir == null) {
             Log.e(LOG_TAG, "Directory has not been created");
             return false;
