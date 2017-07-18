@@ -19,7 +19,7 @@ public class AccelData {
     public short z;
     public boolean did_vibrate;
 
-    public static String CSV_HEADER = "Timestamp\tX(mG)\tY(mG)\tZ(mG)\tVibrate";
+    public static String CSV_HEADER = String.format("Timestamp\tX(mG)\tY(mG)\tZ(mG)\tVibrate%n");
 
     AccelData(byte[] data) {
         /*ByteBuffer wrapBuffer = ByteBuffer.wrap(data);
@@ -100,6 +100,6 @@ public class AccelData {
     }
 
     public String toCSV() {
-        return String.format("%d\t%d\t%d\t%d\t%b", this.timestamp, this.x, this.y, this.z, this.did_vibrate);
+        return String.format("%d\t%d\t%d\t%d\t%b%n", this.timestamp, this.x, this.y, this.z, this.did_vibrate);
     }
 }

@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void receiveData(Context context, UUID logUuid, Long timestamp, Long tag, byte[] data) {
                 // super() (removed from IDE-generated stub to avoid exception)
-                Log.i(LOG_TAG, "New data for session " + tag + "with a lenght of: " + data.length);
+                Log.i(LOG_TAG, "New data for session " + logUuid.toString() + "with a lenght of: " + data.length);
 
                 AccelData accelData = new AccelData(data);
                 accelDataList.add(accelData);
@@ -61,12 +61,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFinishSession(Context context, UUID logUuid, Long timestamp, Long tag) {
                 super.onFinishSession(context, logUuid, timestamp, tag);
-                Log.i(LOG_TAG, "Session " + tag + " finished!");
-                boolean saved = saveData(context, timestamp);;
+                Log.i(LOG_TAG, "Session " + logUuid.toString() + " finished!");
+                boolean saved = saveData(context, logUuid);
                 if (saved) {
-                    mDisplayText.append("Saved file session-" + timestamp.toString() + ".csv\n");
+                    mDisplayText.append("Saved file session-" + logUuid.toString() + ".csv\n");
                 } else {
-                    mDisplayText.append("Unable to save session-" + timestamp.toString() + "\n");
+                    mDisplayText.append("Unable to save session-" + logUuid.toString() + "\n");
                 }
                 handler.post(new Runnable() {
                     @Override
@@ -115,15 +115,19 @@ public class MainActivity extends AppCompatActivity {
 
     public File getPublicExternalStorageDir() {
         // Get the directory for the user's public pictures directory.
-        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "SWP");
+        File file = new File(Environment.getExternalStorageDirectory(), "SWP");
         if (!file.mkdirs()) {
             Log.e(LOG_TAG, "Directory not created");
+        } else {
+            file.setReadable(true);
+            file.setWritable(true);
+            file.setExecutable(true);
         }
         Log.e(LOG_TAG, "directory: " + file.getAbsolutePath());
         return file;
     }
 
-    private boolean saveData(Context context, Long timestamp) {
+    private boolean saveData(Context context, UUID logUuid) {
         if (!this.isExternalStorageWritable()) {
             Log.e(LOG_TAG, "External storage is not writable");
             return false;
@@ -134,8 +138,12 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        File file = new File(dir, "session-" + timestamp.toString() + ".csv");
+        File file = new File(dir, "session-" + logUuid.toString() + ".csv");
         try {
+            file.createNewFile();
+            file.setExecutable(true);
+            file.setWritable(true);
+            file.setReadable(true);
             FileOutputStream outputStream = new FileOutputStream(file);
             outputStream.write(AccelData.CSV_HEADER.getBytes());
             for (AccelData accelData : this.accelDataList) {
@@ -144,9 +152,11 @@ public class MainActivity extends AppCompatActivity {
             outputStream.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            Log.e(LOG_TAG, "File not found");
             return false;
         } catch (IOException e) {
             e.printStackTrace();
+            Log.e(LOG_TAG, "IOException");
             return false;
         }
         return true;
