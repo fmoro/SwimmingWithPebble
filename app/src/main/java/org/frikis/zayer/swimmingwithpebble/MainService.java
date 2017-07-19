@@ -1,13 +1,13 @@
 package org.frikis.zayer.swimmingwithpebble;
 
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
-import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
+import android.os.IBinder;
+import android.os.SystemClock;
+import android.support.annotation.IntDef;
 import android.util.Log;
-import android.widget.TextView;
 
 import com.getpebble.android.kit.PebbleKit;
 
@@ -19,32 +19,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity {
+public class MainService extends Service {
     private static final UUID WATCHAPP_UUID = UUID.fromString("e5d2f0e9-6460-40de-8117-4fb26ab7731b");
     private static final String LOG_TAG = "SWP";
-
-    private final StringBuilder mDisplayText = new StringBuilder();
-
     private PebbleKit.PebbleDataLogReceiver dataLogReceiver = null;
 
     private List<AccelData> accelDataList = new ArrayList<AccelData>();
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public MainService() {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        Intent myIntent = new Intent(MainActivity.this, MainService.class);
-        MainActivity.this.startService(myIntent);
-
-        final Handler handler = new Handler();
-
-        /*dataLogReceiver = new PebbleKit.PebbleDataLogReceiver(WATCHAPP_UUID) {
+    public void onCreate() {
+        dataLogReceiver = new PebbleKit.PebbleDataLogReceiver(WATCHAPP_UUID) {
             @Override
             public void receiveData(Context context, UUID logUuid, Long timestamp, Long tag, byte[] data) {
                 // super() (removed from IDE-generated stub to avoid exception)
@@ -64,27 +51,29 @@ public class MainActivity extends AppCompatActivity {
                 super.onFinishSession(context, logUuid, timestamp, tag);
                 Log.i(LOG_TAG, "Session " + logUuid.toString() + " finished!");
                 boolean saved = saveData(context, logUuid);
-                if (saved) {
-                    mDisplayText.append("Saved file session-" + logUuid.toString() + ".csv\n");
-                } else {
-                    mDisplayText.append("Unable to save session-" + logUuid.toString() + "\n");
-                }
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateUi();
-                    }
-                });
             }
         };
 
-        // Register the receiver
-        PebbleKit.registerDataLogReceiver(getApplicationContext(), dataLogReceiver);*/
+        PebbleKit.registerDataLogReceiver(getApplicationContext(), dataLogReceiver);
     }
 
-    private void updateUi() {
-        TextView textView = (TextView) findViewById(R.id.log_data_text_view);
-        textView.setText(mDisplayText.toString());
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        //throw new UnsupportedOperationException("Not yet implemented");
+        return null;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        //int value = super.onStartCommand(intent, flags, startId);
+        // At this point SimpleWakefulReceiver is still holding a wake lock
+        // for us.  We can do whatever we need to here and then tell it that
+        // it can release the wakelock.
+
+        Log.i("SimpleWakefulReceiver", "Completed service @ " + SystemClock.elapsedRealtime());
+        //MainReceiver.completeWakefulIntent(intent);
+        return START_STICKY;
     }
 
     /* Checks if external storage is available for read and write */
